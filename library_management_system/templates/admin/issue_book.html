@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Issue Book – LibraryMS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4 class="page-title"><i class="bi bi-plus-circle me-2"></i>Issue Book</h4>
+  <a href="{{ url_for('admin.transactions') }}" class="btn btn-outline-secondary">
+    <i class="bi bi-arrow-left me-1"></i>Back
+  </a>
+</div>
+
+<div class="card" style="max-width:560px">
+  <div class="card-body">
+    <div class="alert alert-info d-flex align-items-center gap-2 mb-4">
+      <i class="bi bi-info-circle-fill"></i>
+      <span>Books are issued for <strong>14 days</strong>. Fine: <strong>₹2/day</strong> after due date.</span>
+    </div>
+
+    <form method="POST">
+      <div class="mb-3">
+        <label class="form-label">Select Book *</label>
+        <select name="book_id" class="form-select" required id="bookSelect">
+          <option value="">— Choose a book —</option>
+          {% for book in books %}
+          <option value="{{ book.id }}">{{ book.title }} — {{ book.author }} ({{ book.avail_copies }} available)</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label class="form-label">Select Member *</label>
+        <select name="member_id" class="form-select" required>
+          <option value="">— Choose a member —</option>
+          {% for m in members %}
+          <option value="{{ m.id }}">{{ m.name }} — {{ m.email }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div id="dueDateInfo" class="alert alert-success d-none">
+        <i class="bi bi-calendar-check me-2"></i>
+        Due Date: <strong id="dueDateDisplay"></strong>
+      </div>
+
+      <button type="submit" class="btn btn-primary px-5 mt-2">
+        <i class="bi bi-check-circle me-2"></i>Issue Book
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.getElementById('bookSelect').addEventListener('change', function(){
+    const info = document.getElementById('dueDateInfo');
+    const display = document.getElementById('dueDateDisplay');
+    if(this.value){
+      const due = new Date();
+      due.setDate(due.getDate() + 14);
+      display.textContent = due.toDateString();
+      info.classList.remove('d-none');
+    } else {
+      info.classList.add('d-none');
+    }
+  });
+</script>
+{% endblock %}

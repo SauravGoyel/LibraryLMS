@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}Library Management System{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet"/>
+  <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+{% if current_user.is_authenticated %}
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <i class="bi bi-book-half me-2"></i>
+    <span>LibraryMS</span>
+  </div>
+
+  {% from 'models' import Admin %}
+  {% set is_admin = current_user.__class__.__name__ == 'Admin' %}
+
+  <ul class="sidebar-nav">
+    {% if is_admin %}
+      <li class="nav-section">Admin Panel</li>
+      <li><a href="{{ url_for('admin.dashboard') }}" class="{% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+        <i class="bi bi-speedometer2"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('admin.books') }}" class="{% if 'book' in request.endpoint %}active{% endif %}">
+        <i class="bi bi-journals"></i> Books</a></li>
+      <li><a href="{{ url_for('admin.members') }}" class="{% if 'member' in request.endpoint %}active{% endif %}">
+        <i class="bi bi-people"></i> Members</a></li>
+      <li><a href="{{ url_for('admin.transactions') }}" class="{% if 'transaction' in request.endpoint %}active{% endif %}">
+        <i class="bi bi-arrow-left-right"></i> Transactions</a></li>
+      <li><a href="{{ url_for('admin.issue_book') }}" class="{% if request.endpoint == 'admin.issue_book' %}active{% endif %}">
+        <i class="bi bi-plus-circle"></i> Issue Book</a></li>
+      <li><a href="{{ url_for('admin.reports') }}" class="{% if request.endpoint == 'admin.reports' %}active{% endif %}">
+        <i class="bi bi-bar-chart-line"></i> Reports</a></li>
+    {% else %}
+      <li class="nav-section">Member Panel</li>
+      <li><a href="{{ url_for('member.dashboard') }}" class="{% if request.endpoint == 'member.dashboard' %}active{% endif %}">
+        <i class="bi bi-house"></i> Dashboard</a></li>
+      <li><a href="{{ url_for('member.catalogue') }}" class="{% if request.endpoint == 'member.catalogue' %}active{% endif %}">
+        <i class="bi bi-search"></i> Browse Catalogue</a></li>
+      <li><a href="{{ url_for('member.my_books') }}" class="{% if request.endpoint == 'member.my_books' %}active{% endif %}">
+        <i class="bi bi-bookmark-check"></i> My Books</a></li>
+      <li><a href="{{ url_for('member.profile') }}" class="{% if request.endpoint == 'member.profile' %}active{% endif %}">
+        <i class="bi bi-person-circle"></i> My Profile</a></li>
+    {% endif %}
+  </ul>
+
+  <div class="sidebar-footer">
+    <a href="{{ url_for('auth.logout') }}" class="text-danger">
+      <i class="bi bi-box-arrow-left me-2"></i>Logout
+    </a>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="main-content" id="mainContent">
+  <!-- Topbar -->
+  <nav class="topbar">
+    <button class="btn btn-sm btn-outline-secondary" id="sidebarToggle">
+      <i class="bi bi-list fs-5"></i>
+    </button>
+    <div class="topbar-right">
+      <span class="badge {% if current_user.__class__.__name__ == 'Admin' %}bg-danger{% else %}bg-primary{% endif %} me-2">
+        {{ current_user.__class__.__name__ }}
+      </span>
+      <span class="fw-semibold">{{ current_user.name }}</span>
+    </div>
+  </nav>
+
+  <!-- Flash messages -->
+  <div class="px-4 pt-3">
+    {% for category, message in get_flashed_messages(with_categories=True) %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  </div>
+
+  <!-- Page content -->
+  <div class="page-content px-4 pb-4">
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% else %}
+  {% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% block title %}Transactions – LibraryMS{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h4 class="page-title"><i class="bi bi-arrow-left-right me-2"></i>Transactions</h4>
+  <a href="{{ url_for('admin.issue_book') }}" class="btn btn-primary">
+    <i class="bi bi-plus me-1"></i>Issue Book
+  </a>
+</div>
+
+<!-- Filter tabs -->
+<div class="card mb-3">
+  <div class="card-body py-2">
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('admin.transactions') }}" class="btn btn-sm {% if not status %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+      <a href="{{ url_for('admin.transactions', status='issued') }}" class="btn btn-sm {% if status=='issued' %}btn-warning{% else %}btn-outline-warning{% endif %}">Issued</a>
+      <a href="{{ url_for('admin.transactions', status='returned') }}" class="btn btn-sm {% if status=='returned' %}btn-success{% else %}btn-outline-success{% endif %}">Returned</a>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th>#</th><th>Book</th><th>Member</th>
+            <th>Issue Date</th><th>Due Date</th><th>Return Date</th>
+            <th>Fine</th><th>Status</th><th class="text-center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for txn in txns.items %}
+          <tr {% if txn.status == 'issued' and txn.due_date < today %}class="table-danger"{% endif %}>
+            <td class="text-muted">{{ txn.id }}</td>
+            <td>
+              <div class="fw-semibold">{{ txn.book.title[:35] }}{% if txn.book.title|length > 35 %}…{% endif %}</div>
+              <small class="text-muted">{{ txn.book.author }}</small>
+            </td>
+            <td>{{ txn.member.name }}</td>
+            <td>{{ txn.issue_date }}</td>
+            <td class="{% if txn.status == 'issued' and txn.due_date < today %}text-danger fw-bold{% endif %}">
+              {{ txn.due_date }}
+            </td>
+            <td>{{ txn.return_date or '–' }}</td>
+            <td>
+              {% set fine = txn.calculate_fine() %}
+              {% if fine > 0 %}
+                <span class="text-danger fw-semibold">₹{{ "%.2f"|format(fine) }}</span>
+              {% else %}–{% endif %}
+            </td>
+            <td>
+              {% if txn.status == 'returned' %}
+                <span class="badge bg-success">Returned</span>
+              {% elif txn.due_date < today %}
+                <span class="badge bg-danger">Overdue</span>
+              {% else %}
+                <span class="badge bg-warning text-dark">Issued</span>
+              {% endif %}
+            </td>
+            <td class="text-center">
+              {% if txn.status == 'issued' %}
+              <form method="POST" action="{{ url_for('admin.return_book', txn_id=txn.id) }}"
+                    onsubmit="return confirm('Mark this book as returned?{% if txn.calculate_fine() > 0 %} Fine: ₹{{ txn.calculate_fine() }}{% endif %}')">
+                <button type="submit" class="btn btn-sm btn-success">
+                  <i class="bi bi-check-circle me-1"></i>Return
+                </button>
+              </form>
+              {% else %}
+              <span class="text-muted">–</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr><td colspan="9" class="text-center text-muted py-4">No transactions found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if txns.pages > 1 %}
+<nav class="mt-3">
+  <ul class="pagination justify-content-center">
+    <li class="page-item {% if not txns.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.transactions', page=txns.prev_num, status=status) }}">Previous</a>
+    </li>
+    {% for p in txns.iter_pages() %}
+      {% if p %}
+        <li class="page-item {% if p == txns.page %}active{% endif %}">
+          <a class="page-link" href="{{ url_for('admin.transactions', page=p, status=status) }}">{{ p }}</a>
+        </li>
+      {% endif %}
+    {% endfor %}
+    <li class="page-item {% if not txns.has_next %}disabled{% endif %}">
+      <a class="page-link" href="{{ url_for('admin.transactions', page=txns.next_num, status=status) }}">Next</a>
+    </li>
+  </ul>
+</nav>
+{% endif %}
+{% endblock %}
